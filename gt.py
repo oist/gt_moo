@@ -223,7 +223,7 @@ def main(params,n_runs):
         del mask_penalty_np, den_map_np
 
 
-        ############ Recording of the results ###############.
+        ############ Record the results ###############.
         with open(params['my_path_results']+'evol/'+'moo_results_'+str(params['gen'])+'_'+params['group']+'.txt','a') as file:
             #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters)
             file.write(params['val']+','+str(cost_1)+','+str(cost_4)+','+str(cost_2)+','+str(cost_3[0])+','+\
