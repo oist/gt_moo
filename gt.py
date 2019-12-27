@@ -13,6 +13,7 @@ from settings import *
 from scipy import stats
 import scipy.io as sio
 from numpy import matlib as mb
+import json
 
 def mapme(my_path_source,CM): #function for mapping to 20 x 104 tracer-based matrix (Code from Skibbe H.)
     mapping = sio.loadmat(my_path_source+'atlas/'+'mat_mapping.mat')
