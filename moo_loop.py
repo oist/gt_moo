@@ -60,10 +60,9 @@ def globaltracking(individual,group):
     
     # create and submit a job
     if (os.path.isfile(params['my_path_results']+'jobs/job_'+params['val']+'.slurm')):
-        print('job already done : ',params['val'])
-    else:
-        print('launching job for individual: ',params['val'])
-        launch_job(params)
+        print('job already done (it will be overwritten): ',params['val'])
+    print('launching job for individual: ',params['val'])
+    launch_job(params)
 
 
 def get_fitnesses(my_pop,group):
