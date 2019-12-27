@@ -14,7 +14,7 @@ import time, array
 import sys
 sys.path.append('/apps/unit/DoyaU/deap/lib/python3.5/site-packages/')
 from deap import base, tools, creator
-from settings_okinawa import *
+from settings import *
 
 
 def launch_job(params):
