@@ -9,9 +9,7 @@ The method reported here was implemented on a cluster HPC computer. In order to 
 To start the the light jobs please run -> python run_moo.py
 
 Dependencies:
-global tracking
-deap
-SimpleITK
+global tracking, deap, SimpleITK
 
 
 
