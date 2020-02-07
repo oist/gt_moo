@@ -200,6 +200,11 @@ def optimize(grid):
             for ind in pop:
                 file.write(str(gen1)+' '+str(ind)+' '+str(ind.fitness.values)+' '+str(ind.fitness.__dict__['id'])+' \n')
 
+def run_gt_with_fixed_params():
+    print('nothing')
+
+
+
 if __name__ == '__main__':    
     brain_id = sys.argv[1]
     my_count = 0 # counter for job id, it must be re-initialized to a new value in case of a re-run of the optimization.

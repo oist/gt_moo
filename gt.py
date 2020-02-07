@@ -111,14 +111,9 @@ def main(params,n_runs):
         
         ###### load data sources ############
         # load tracer
-        my_boundary=0.1 #threshold to remove background
+        my_boundary=100.#0.1 #threshold to remove background
         template = sitk.ReadImage(str(params['my_path_source']+'tracer_masked_TC_org_2_MRI_std.nii.gz'))
         tracer_np = sitk.GetArrayFromImage(template)
-        tracer_np[tracer_np>my_boundary]=99
-        tracer_np[tracer_np<=my_boundary]=0
-        tracer_np[tracer_np==99]=1 #image binarization (tracer image mask)
-        tracer_np_weigthed = sitk.GetArrayFromImage(template) # original tracer image (weighted pixels)
-        tracer_np_weigthed[tracer_np_weigthed<=my_boundary]=0 
         del template
 
         # load whole-brain mask
@@ -129,9 +124,6 @@ def main(params,n_runs):
         #load subset of fibers density map
         tracks = sitk.ReadImage(str(params['my_path_results']+'map/inj_map_'+params['val']+'.nii'))
         tracks_np = sitk.GetArrayFromImage(tracks)
-        tracks_np[tracks_np>0]=99
-        tracks_np[tracks_np<=0]=0
-        tracks_np[tracks_np==99]=1 # binarization
         del tracks
 
 
@@ -139,47 +131,43 @@ def main(params,n_runs):
         # center of mass of the injection point center
         img_inj = sitk.ReadImage(str(params['my_path_source']+'inj_center_TC_org_2_MRI_std.nii.gz'))
         img_inj_np = sitk.GetArrayFromImage(img_inj)
-        img_inj_np[img_inj_np>0.1]=99
-        img_inj_np[img_inj_np<=0.1]=0
-        img_inj_np[img_inj_np==99]=1 # image binarization (injection center mask)
-        roi_sum = np.sum(img_inj_np[img_inj_np==1])
-        xyz = np.where(img_inj_np==1)
+        del img_inj
+
+        roi_sum = np.sum(img_inj_np[img_inj_np>0.1])
+        xyz = np.where(img_inj_np>0.1)
         cx,cy,cz = int(np.sum(xyz[0])/roi_sum), int(np.sum(xyz[1])/roi_sum), int(np.sum(xyz[2])/roi_sum) #center of mass coordinates.
-        del img_inj, img_inj_np, roi_sum, xyz
+        del roi_sum, xyz, img_inj_np
 
         # distances from tracer voxels to center of mass
-        xyz_tracer = np.where(np.logical_and(tracer_np==1,img_mask_np==1)==1)
+        xyz_tracer = np.where(np.logical_and(tracer_np>my_boundary,img_mask_np==1)==1)
         dist=np.sqrt((xyz_tracer[0]-cx)**2+(xyz_tracer[1]-cy)**2+(xyz_tracer[2]-cz)**2)
         dist_norm = dist/dist.max() #distances normalization
 
         # pixels weight from raw tracer intensity
-        tracer_np_weigthed = tracer_np_weigthed/tracer_np_weigthed.max() #normalization
+        tracer_np_weigthed = tracer_np[xyz_tracer]/tracer_np[xyz_tracer].max() #normalization
         
         # weights (pixels intensity and distance) combination for all NP (positives)
-        dist_int_tracer = np.multiply(dist_norm,tracer_np_weigthed[xyz_tracer])
+        dist_int_tracer = np.multiply(dist_norm,tracer_np_weigthed)
         dist_int_tracer = dist_int_tracer/np.sum(dist_int_tracer) #normalization
 
         # weighted TPR
-        den_tra_eq = np.logical_and(tracks_np==tracer_np,tracer_np==1)
-        den_tra_eq_neg = np.logical_and(tracks_np==tracer_np,tracer_np<1)
-        xyz_den = np.where(np.logical_and(den_tra_eq,img_mask_np==1)==1)
-        xyz_den_stack = np.vstack((np.vstack((xyz_den[0],xyz_den[1])),xyz_den[2])) # TP  (True positives)
-        xyz_tracer_stack = np.vstack((np.vstack((xyz_tracer[0],xyz_tracer[1])),xyz_tracer[2])) # NP (all positives)
-        xyz_den_stack = xyz_den_stack.T
-        xyz_tracer_stack = xyz_tracer_stack.T
-        del xyz_tracer, xyz_den
-        cost_1 = 0
-        for k in np.arange(len(xyz_den_stack)):
-            cost_1+= dist_int_tracer[np.where(np.all(xyz_tracer_stack==xyz_den_stack[k,:],axis=1))[0][0]]  # sum of TP weights
-        del xyz_den_stack, xyz_tracer_stack
+        den_tra_eq = np.where(tracks_np[xyz_tracer]>0.)[0]
+        cost_1 = np.sum(dist_int_tracer[den_tra_eq])  
 
 
         ############# Ratio ################
         # non-weighted TPR and FPR
-        TPR = np.sum(np.logical_and(den_tra_eq,img_mask_np==1))/float(np.sum(np.logical_and(tracer_np==1,img_mask_np==1))) # True positive
-        SPC = np.sum(np.logical_and(den_tra_eq_neg,img_mask_np==1))/float(np.sum(np.logical_and(tracer_np<=0,img_mask_np==1))) # True negative
-        FPR = 1. - SPC # False positive
-        del den_tra_eq_neg, den_tra_eq, img_mask_np, tracks_np, tracer_np
+        xyz_no_tracer = np.where(np.logical_and(tracer_np<=my_boundary,img_mask_np==1)==1) #N        
+        number_of_TP = float(len(np.where(tracks_np[xyz_tracer]>0.)[0])) #TP
+        number_of_P = float(len(xyz_tracer[0])) #P
+        number_of_TN = float(len(np.where(tracks_np[xyz_no_tracer]<=0.)[0])) #TN
+        number_of_N = float(len(xyz_no_tracer[0])) #N
+
+        TPR = number_of_TP/number_of_P
+        SPC = number_of_TN/number_of_N #(TNR)
+        FPR = 1. - SPC # False positive FPR
+        del den_tra_eq, img_mask_np, tracks_np, tracer_np, xyz_tracer, dist, dist_norm
+        del tracer_np_weigthed, dist_int_tracer, xyz_no_tracer
 
         mu_n = np.loadtxt('./my_epsilon.txt') #mean number of TN (training data set)
         mu_p = np.loadtxt('./my_gamma.txt')  #mean number of TP (training data set)
@@ -187,7 +175,7 @@ def main(params,n_runs):
         cost_2 = cost_1/(FPR + tolerance) #ratio
 
 
-        ############# correlation between DTI and tracer based connection matrices (right-side) ################
+        ############# correlation between DTI and tracer based connection matrices (cross-side) ################
         # averaged DTI-based connection matrix (full set of fibers)
         aux =[]
         for k in np.arange(int(n_runs)):
@@ -221,22 +209,26 @@ def main(params,n_runs):
 
         #sum and normalization
         cost_4 = np.sum(np.logical_and(den_map_np>0,mask_penalty_np>0))/float(len(mask_penalty_np[mask_penalty_np>0])) #penalty
+        P_outside = np.sum(np.logical_and(den_map_np>0,mask_penalty_np>0))
+        P_inside = np.sum(np.logical_and(den_map_np>0,mask_penalty_np<=0))
+        cost_4_b = float(P_inside)/(float(P_inside)+float(P_outside)) #this is similar to precision. #Penalty b
         del mask_penalty_np, den_map_np
-
 
         ############ Record the results ###############.
         with open(params['my_path_results']+'evol/'+'moo_results_'+str(params['gen'])+'_'+params['group']+'.txt','a') as file:
-            #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters)
+            #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters), penalty_b, TRP, FPR, SPC
             file.write(params['val']+','+str(cost_1)+','+str(cost_4)+','+str(cost_2)+','+str(cost_3[0])+','+\
             str(params['individual'][0])+','+str(params['individual'][1])+','+ str(params['individual'][2])+','+\
-            str(params['individual'][3])+','+str(params['individual'][4])+'\n')            
+            str(params['individual'][3])+','+str(params['individual'][4])+','+\
+            str(cost_4_b)+','+str(TPR)+','+str(FPR)+','+str(SPC)+'\n')   #additional data         
     except:
         print('tracking failed, going to the except branch')
         with open(params['my_path_results']+'evol/'+'moo_results_'+str(params['gen'])+'_'+params['group']+'.txt','a') as file:
             #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters)
             file.write(params['val']+','+str(0)+','+str(1)+','+str(0)+','+str(0)+','+\
             str(params['individual'][0])+','+str(params['individual'][1])+','+str(params['individual'][2])+','+\
-            str(params['individual'][3])+','+str(params['individual'][4])+'\n')
+            str(params['individual'][3])+','+str(params['individual'][4])+','+\
+            str(0)+','+str(0)+','+str(0)+','+str(0)+'\n')
         
 print('owari')
 
