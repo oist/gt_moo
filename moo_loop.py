@@ -200,17 +200,35 @@ def optimize(grid):
             for ind in pop:
                 file.write(str(gen1)+' '+str(ind)+' '+str(ind.fitness.values)+' '+str(ind.fitness.__dict__['id'])+' \n')
 
-def run_gt_with_fixed_params():
-    print('nothing')
+def run_gt_with_fixed_params(test_params):
+    global my_count
+    my_count+=1
+    # create a txt file with the parameters.
+    params = {}
+    individual = test_params
+    params['individual']=list(individual)
+    params['brain_id']=brain_id
+    params['val'] = brain_id+'_'+str(my_count)+'_'+str(0)
+    params['my_path_source'] = my_path_source
+    params['my_path_results'] = my_path_results
+    params['lod'] = lod
+    params['mask']=mask
+    params['mode']='test'#my_mode
+    with open(my_path_results+'config/'+'config_'+params['val']+'.txt', 'w') as outfile:
+        json.dump(params, outfile, indent=4, sort_keys=True)
+    #send job
+    print('launching ',params['val'])
+    launch_job(params) # launching the job 
 
 
 
 if __name__ == '__main__':    
     brain_id = sys.argv[1]
+    my_mode = sys.argv[2]   # def or opt  (default or optimized, used with fixed parameters.)
     my_count = 0 # counter for job id, it must be re-initialized to a new value in case of a re-run of the optimization.
     gen1 = 0 # evolution id.
     my_path_source = my_path + brain_id+'/moo_exvivo/' # source data for each brain
-    my_path_results = my_path + brain_id+'/moo_output/' # optimization results
+    my_path_results = my_path + brain_id+'/moo_output_test_known_opt/'#'/moo_output/' # optimization results
     
     # create folders to store the results:
     if not os.path.exists(my_path_results):
@@ -239,6 +257,11 @@ if __name__ == '__main__':
     with open(my_path_results+'evol/'+'bests.txt', 'a') as file:
         file.write('#gen champions'+'\n')
     
-    optimize(grid)
-
+    if my_mode=='optimize':
+        optimize(grid)
+    if my_mode=='test'
+        for i in range(5): #run 5 times for each brain.
+            test_params = list(np.random.normal([0.0707666721189,0.450059693622,0.0546146307357,0.106489808569,0.86888387815],[0.00501577244587,0.0438851844374,0.0277258714881,0.032409560655,0.229367935848])) # default.
+            #test_params = [] #empty list runs default parameters. [0.1,0.3,0.133,0.2,0.5]
+            run_gt_with_fixed_params(test_params)
 print('the-end')

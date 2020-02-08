@@ -11,7 +11,7 @@ from settings import *
 ###### MAIN PROCESS, (build and send a job for each brain) ########
 for i in BRAINS:
     slurmOptions = SLURM_OPTIONS_1 + ['#SBATCH --job-name=job_'+i+' \n','#SBATCH -e '+i+'.out \n',
-    '#SBATCH -o '+i+'.out \n'] + SLURM_OPTIONS_1_1 + ['time python3 moo_loop.py '+i+'\n']
+    '#SBATCH -o '+i+'.out \n'] + SLURM_OPTIONS_1_1 + ['time python3 moo_loop.py '+i+' '+my_mode+'\n']
     script = open(i+'.slurm','w')
     script.writelines(slurmOptions)
     script.close()

@@ -64,12 +64,17 @@ def main(params,n_runs):
     try:
         for i in np.arange(int(n_runs)):
             # run global tracking
-            c1 = COMMAND_2 + 'trackme(\'folder\',\''+params['my_path_source']+'\',\'lod\',\''+params['lod']+'\',\'file_mask\',\''+params['my_path_source']+params['mask']+'\',\'params\',{\'width\','+str(params['individual'][0])+ \
-            ',\'length\','+str(params['individual'][1])+',\'weight\','+str(params['individual'][2])+ \
-            ',\'chemPot2\','+ str(params['individual'][3])+',\'chemPot1\','+str(0.0)+',\'connlike\','+str(params['individual'][4])+ \
-            '},\'ofile\',\''+params['my_path_results']+'tracking/'+params['val']+'_'+str(i)+'\');exit;\"'
-            print(c1)
-            subprocess.call(c1, shell=True)
+            if len(params['individual'])==0:  # default case
+                c1 = COMMAND_2 + 'trackme(\'folder\',\''+params['my_path_source']+'\',\'lod\',\''+params['lod']+'\','+'\'file_mask\',\''+params['my_path_source']+params['mask']+'\',\'params\',{},\'ofile\',\''+params['my_path_results']+'tracking/'+params['val']+'_'+str(i)+'\');exit;\"'
+                print(c1)
+                subprocess.call(c1, shell=True) # run global tracking
+            else:    
+                c1 = COMMAND_2 + 'trackme(\'folder\',\''+params['my_path_source']+'\',\'lod\',\''+params['lod']+'\',\'file_mask\',\''+params['my_path_source']+params['mask']+'\',\'params\',{\'width\','+str(params['individual'][0])+ \
+                ',\'length\','+str(params['individual'][1])+',\'weight\','+str(params['individual'][2])+ \
+                ',\'chemPot2\','+ str(params['individual'][3])+',\'chemPot1\','+str(0.0)+',\'connlike\','+str(params['individual'][4])+ \
+                '},\'ofile\',\''+params['my_path_results']+'tracking/'+params['val']+'_'+str(i)+'\');exit;\"'
+                print(c1)
+                subprocess.call(c1, shell=True)
             
             #move the complete set of fibers from dwi to standard brain space
             command = 'tcknormalise -force -info '+ params['my_path_results']+'tracking/'+params['val']+'_'+str(i) + '.tck'+' '+\

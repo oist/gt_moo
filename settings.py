@@ -16,7 +16,7 @@ SLURM_OPTIONS_1 = ['#!/bin/bash \n\n',
                     '#SBATCH --time=7-00:00:00 \n',
                     '#SBATCH --mem 4gb \n',
                     '#SBATCH -c 1 \n',
-                    '#SBATCH --partition=xxxxxxxx \n', 
+                    '#SBATCH --partition=postproc1 \n', 
                     '#SBATCH --input=none \n']
 SLURM_OPTIONS_1_1 = ['module load matlab/R2015a \n',
                     'module load python/3.5.0 \n',
@@ -30,7 +30,7 @@ SLURM_OPTIONS_2 = ['#!/bin/bash \n\n',
                     '#SBATCH --time=7-00:00:00 \n',
                     '#SBATCH --mem 30gb \n',
                     '#SBATCH -c 2 \n',
-                    '#SBATCH --partition=xxxxxxxxxx \n',
+                    '#SBATCH --partition=compute \n',
                     '#SBATCH --input=none \n']
 SLURM_OPTIONS_2_1 = ['module load matlab/R2015a \n',
                     'module load python/3.5.0 \n',
@@ -51,8 +51,9 @@ grid['connlike']=[0.5,6.0]  # -> [0.1,3.0]
 my_path = '/work/DoyaU/carlos/dwi_pip/database/' #dwi database path
 mask = 'auto-brain_map_org_mask.nii' #whole-brain mask at standard brain space
 lod = 'suggestSparse'
+my_mode = 'test' #'optimize'
 
 # how many runs of Global tracking per brain for the same parameters (results are averaged)
-n_runs = 2 
+n_runs = 1#2 
 
 
