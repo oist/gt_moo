@@ -10,6 +10,10 @@ BRAINS = ['R01_0070_CM1180F','R01_0072_CM1176F','R01_0078_CM1347F','R01_0071_CM1
           'R01_0029_CM696F','R01_0030_CM690F','R01_0054_CM1060F','R01_0034_CM521F',
           'R01_0039_CM703F','R01_0033_CM694F']
 
+# Test data set
+#BRAINS = ['R01_0026_CM692F','R01_0040_CM710M','R01_0048_CM1011F',
+#          'R01_0043_CM628F','R01_0053_CM1061F','R01_0046_CM1023M']
+
 
 # Options for jobs building (change this as needed)
 SLURM_OPTIONS_1 = ['#!/bin/bash \n\n',
@@ -51,7 +55,7 @@ grid['connlike']=[0.5,6.0]  # -> [0.1,3.0]
 my_path = '/work/DoyaU/carlos/dwi_pip/database/' #dwi database path
 mask = 'auto-brain_map_org_mask.nii' #whole-brain mask at standard brain space
 lod = 'suggestSparse'
-my_mode = 'test' #'optimize'
+my_mode = 'test' #'optimize' will run optimization
 
 # how many runs of Global tracking per brain for the same parameters (results are averaged)
 n_runs = 1#2 

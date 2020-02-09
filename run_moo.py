@@ -16,5 +16,5 @@ for i in BRAINS:
     script.writelines(slurmOptions)
     script.close()
     os.system(COMMAND_1 +i+'.slurm')
-
+    
 print('seeds jobs submitted')

@@ -214,11 +214,27 @@ def run_gt_with_fixed_params(test_params):
     params['lod'] = lod
     params['mask']=mask
     params['mode']='test'#my_mode
+    params['group']='test'
+    params['gen']=0
     with open(my_path_results+'config/'+'config_'+params['val']+'.txt', 'w') as outfile:
         json.dump(params, outfile, indent=4, sort_keys=True)
     #send job
     print('launching ',params['val'])
-    launch_job(params) # launching the job 
+    launch_job(params) # launching the job
+
+
+    params = {}
+    params['individual']=list(individual)
+    params['brain_id']=brain_id
+    params['val'] = brain_id+'_'+str(my_count)+'_'+str(gen1) #id
+    params['my_path_source'] = my_path_source
+    params['my_path_results'] = my_path_results
+    params['lod'] = lod
+    params['mask']=mask
+    params['group']=group
+    params['gen']=gen1
+
+
 
 
 
@@ -259,7 +275,7 @@ if __name__ == '__main__':
     
     if my_mode=='optimize':
         optimize(grid)
-    if my_mode=='test'
+    if my_mode=='test':
         for i in range(5): #run 5 times for each brain.
             test_params = list(np.random.normal([0.0707666721189,0.450059693622,0.0546146307357,0.106489808569,0.86888387815],[0.00501577244587,0.0438851844374,0.0277258714881,0.032409560655,0.229367935848])) # default.
             #test_params = [] #empty list runs default parameters. [0.1,0.3,0.133,0.2,0.5]
