@@ -244,7 +244,7 @@ if __name__ == '__main__':
     my_count = 0 # counter for job id, it must be re-initialized to a new value in case of a re-run of the optimization.
     gen1 = 0 # evolution id.
     my_path_source = my_path + brain_id+'/moo_exvivo/' # source data for each brain
-    my_path_results = my_path + brain_id+'/moo_output_test_known_opt/'#'/moo_output/' # optimization results
+    my_path_results = my_path + brain_id+'/moo_output/' #'/moo_output_test_known_opt/'# # optimization results
     
     # create folders to store the results:
     if not os.path.exists(my_path_results):

@@ -55,9 +55,9 @@ grid['connlike']=[0.5,6.0]  # -> [0.1,3.0]
 my_path = '/work/DoyaU/carlos/dwi_pip/database/' #dwi database path
 mask = 'auto-brain_map_org_mask.nii' #whole-brain mask at standard brain space
 lod = 'suggestSparse'
-my_mode = 'test' #'optimize' will run optimization
+my_mode = 'optimize' #'test' will run 5 times,  #'optimize' will run optimization
 
 # how many runs of Global tracking per brain for the same parameters (results are averaged)
-n_runs = 1#2 
+n_runs = 2 #1 
 
 

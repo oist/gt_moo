@@ -15,7 +15,7 @@ import scipy.io as sio
 from numpy import matlib as mb
 import json
 
-def mapme(my_path_source,CM): #function for mapping to 20 x 104 tracer-based matrix (Code from Skibbe H.)
+def mapme(my_path_source,CM): #function for mapping to 20 x 104 tracer-based matrix (Code and tracer-based connectome from Skibbe H.)
     mapping = sio.loadmat(my_path_source+'atlas/'+'mat_mapping.mat')
     # the injection site regions we have in meso
     macro_srcs = np.squeeze(mapping['macro_srcs'])
@@ -132,7 +132,7 @@ def main(params,n_runs):
         del tracks
 
 
-        ############# weighted TPR based on distances to the center of the inj. point and pixels intensity ################
+        ############# distance-weighted coverage ################
         # center of mass of the injection point center
         img_inj = sitk.ReadImage(str(params['my_path_source']+'inj_center_TC_org_2_MRI_std.nii.gz'))
         img_inj_np = sitk.GetArrayFromImage(img_inj)
@@ -155,12 +155,12 @@ def main(params,n_runs):
         dist_int_tracer = np.multiply(dist_norm,tracer_np_weigthed)
         dist_int_tracer = dist_int_tracer/np.sum(dist_int_tracer) #normalization
 
-        # weighted TPR
+        # distance-weighted TPR
         den_tra_eq = np.where(tracks_np[xyz_tracer]>0.)[0]
         cost_1 = np.sum(dist_int_tracer[den_tra_eq])  
 
 
-        ############# Ratio ################
+        ############# True/False positive ratio ################
         # non-weighted TPR and FPR
         xyz_no_tracer = np.where(np.logical_and(tracer_np<=my_boundary,img_mask_np==1)==1) #N        
         number_of_TP = float(len(np.where(tracks_np[xyz_tracer]>0.)[0])) #TP
@@ -177,10 +177,10 @@ def main(params,n_runs):
         mu_n = np.loadtxt('./my_epsilon.txt') #mean number of TN (training data set)
         mu_p = np.loadtxt('./my_gamma.txt')  #mean number of TP (training data set)
         tolerance = (0.01*mu_p*0.6)/mu_n #tolerance model
-        cost_2 = cost_1/(FPR + tolerance) #ratio
+        cost_2 = cost_1/(FPR + tolerance) # True/False positive ratio
 
 
-        ############# correlation between DTI and tracer based connection matrices (cross-side) ################
+        ############# correlation coeficient between dMRI- and tracer-based connection matrices (projections-side) ################
         # averaged DTI-based connection matrix (full set of fibers)
         aux =[]
         for k in np.arange(int(n_runs)):
@@ -199,10 +199,10 @@ def main(params,n_runs):
         CMme_log_norm = (CMme_log-np.min(CMme_log))/(np.max(CMme_log)-np.min(CMme_log)) #normalization between 0-1 
         # Spearman correlation of the right hemisphere (projections)
         Spear_conn = stats.spearmanr(CMma_log_norm.flatten(),CMme_log_norm.flatten())
-        cost_3 = stats.spearmanr(CMma_log_norm[:,:52].flatten(),CMme_log_norm[:,:52].flatten())
+        cost_3 = stats.spearmanr(CMma_log_norm[:,:52].flatten(),CMme_log_norm[:,:52].flatten()) #Spearman correlation coeficient
 
         
-        ############# Penalty ################
+        ############# Commissural Passage ################
         mask_penalty = sitk.ReadImage(str(my_path+'model/mask_penalty.nii')) #transversal mask
         mask_penalty_np = sitk.GetArrayFromImage(mask_penalty)
         del mask_penalty
@@ -213,15 +213,15 @@ def main(params,n_runs):
         del den_map
 
         #sum and normalization
-        cost_4 = np.sum(np.logical_and(den_map_np>0,mask_penalty_np>0))/float(len(mask_penalty_np[mask_penalty_np>0])) #penalty
+        cost_4 = np.sum(np.logical_and(den_map_np>0,mask_penalty_np>0))/float(len(mask_penalty_np[mask_penalty_np>0])) #Comm. passage.
         P_outside = np.sum(np.logical_and(den_map_np>0,mask_penalty_np>0))
         P_inside = np.sum(np.logical_and(den_map_np>0,mask_penalty_np<=0))
-        cost_4_b = float(P_inside)/(float(P_inside)+float(P_outside)) #this is similar to precision. #Penalty b
+        cost_4_b = float(P_inside)/(float(P_inside)+float(P_outside)) #this is similar to precision. #Comm. passage b
         del mask_penalty_np, den_map_np
 
         ############ Record the results ###############.
         with open(params['my_path_results']+'evol/'+'moo_results_'+str(params['gen'])+'_'+params['group']+'.txt','a') as file:
-            #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters), penalty_b, TRP, FPR, SPC
+            #brain_id, TPR*(distance-weighted cov.), comm_passage, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters), comm_passage_b, TRP, FPR, SPC
             file.write(params['val']+','+str(cost_1)+','+str(cost_4)+','+str(cost_2)+','+str(cost_3[0])+','+\
             str(params['individual'][0])+','+str(params['individual'][1])+','+ str(params['individual'][2])+','+\
             str(params['individual'][3])+','+str(params['individual'][4])+','+\
@@ -229,7 +229,7 @@ def main(params,n_runs):
     except:
         print('tracking failed, going to the except branch')
         with open(params['my_path_results']+'evol/'+'moo_results_'+str(params['gen'])+'_'+params['group']+'.txt','a') as file:
-            #brain_id, TPR*, penalty, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters)
+            #brain_id, TPR*(distance-weighted cov.), comm_passage, ratio, correlation, param1, param2, param3, param4, param5 (objectives and parameters),.....
             file.write(params['val']+','+str(0)+','+str(1)+','+str(0)+','+str(0)+','+\
             str(params['individual'][0])+','+str(params['individual'][1])+','+str(params['individual'][2])+','+\
             str(params['individual'][3])+','+str(params['individual'][4])+','+\
