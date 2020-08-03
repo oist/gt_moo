@@ -15,9 +15,10 @@ For each iteration, a light job creates and dispatches 8 heavy jobs (1 job per i
 
 To start the optimization process:  ```python run_moo.py```
 
-## Desktop PC veersion
+## Desktop PC version
 An alternative portable implementation is made available for running on a desktop PC, targeting commonly used tractography approaches that not require important computing resources. This version uses mpi4py to run parallel evolutionary processes, one per brain, while tractography runs sequentially within each process. Champions sharing and processes synchronization are implemented as well. The iFOD2 algorithm case used this version of the code.
 
+To start the optiimzation process for `np` brains: ``` mpiexec -np 5 python l_run_moo.py ```
 
 ## Output
 Results are organized in a folder structure.
@@ -26,7 +27,7 @@ Results are organized in a folder structure.
 The running time depends on the fiber-tracking algorithm, the complexity of the objective functions and the number of generated fibers.
 
 ## About Brain/MINDS data
-Data sources used here are not publicly available (eventually, it will be disclosed as part of Brain/MINDS project results). For more details please visit [Brain/MINDS] (https://www.brainminds.riken.jp).
+Data sources used here are not publicly available (however, they will be disclosed as part of Brain/MINDS project results in the short/medium term). For more details please visit [Brain/MINDS] (https://www.brainminds.riken.jp).
 
 ## Dependencies
 
@@ -42,11 +43,6 @@ pickle
 
 global tracking ->  https://www.uniklinik-freiburg.de/mr-en/research-groups/diffperf/fibertools.html
 
-
-
-
-Desktop PC verion:
-
-
+mpi4py (PC version)
 
 
