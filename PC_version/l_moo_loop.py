@@ -12,32 +12,15 @@ import json
 import pickle
 import time, array
 import sys
-#sys.path.append('/apps/unit/DoyaU/deap/lib/python3.5/site-packages/')
 from deap import base, tools, creator
 from l_settings import *
 import l_gt
 
 
 def launch_job(params):
-    if my_process == 'sequential':
-        print('sending sequential tracking runs .... ')
-        for index in np.arange(len(params['val'])):
-            #param_val_i = params['val'][i]
-            #param_individual_i = params['individual'][i]
-            l_gt.main(params,n_runs,index)
-        
-    else:
-        slurmOptions = SLURM_OPTIONS_2 + ['#SBATCH --job-name=job_'+params['val']+' \n',
-                    '#SBATCH -e '+params['my_path_results']+'jobs/job_'+params['val']+'.out \n',
-                    '#SBATCH -o '+params['my_path_results']+'jobs/job_'+params['val']+'.out \n'] +\
-                    SLURM_OPTIONS_2_1 + ['time python3 gt.py '+params['my_path_results']+'config/config_'+params['val']+'.txt '+str(n_runs)+' \n']
-
-        script = open(params['my_path_results']+'jobs/'+'job_'+params['val']+'.slurm','w')
-        script.writelines(slurmOptions)
-        script.close()
-        command = COMMAND_1 + params['my_path_results']+'jobs/'+'job_'+params['val']+'.slurm'
-        print('submitting job: ',command)
-        os.system(command)
+    print('sending tracking runs .... ')
+    for index in np.arange(len(params['val'])):
+        l_gt.main(params,n_runs,index)
 
 
 def uniform(low, up, size=None):
@@ -83,7 +66,6 @@ def do_tracking(my_pop,group,brain_id):
     params['val'] = [brain_id+'_'+str(i)+'_'+str(gen1) for i in my_count_list]  #id list #brain_id+'_'+str(my_count)+'_'+str(gen1) #id
     params['my_path_source'] = my_path_source
     params['my_path_results'] = my_path_results
-    params['mask']=mask
     params['group']=group
     params['gen']=str(gen1)
 
@@ -100,25 +82,13 @@ def do_tracking(my_pop,group,brain_id):
 def get_fitnesses(my_pop,group,brain_id):
     with open(my_path_results+'evol/'+'moo_results_'+str(gen1)+'_'+group+'.txt','a') as file: #create a summary for each fitness processing call
         file.write('#brain_id,TPR local,FPR local,TPR global,FPR global,param1,param2,param3,TNR local,Spearman corr local,TNR global,Spearman corr global' +'\n')
-
-        
+    
     a = []
     #send 1 job with many processes (1 process per individual)
     config_file = do_tracking(my_pop,group,brain_id)
 
-    if my_process != 'sequential':
-        readyToGo = False
-        while not readyToGo: #wait until completion of fitness calculation for all the individuals
-            with open(my_path_results+'evol/'+'moo_results_'+str(gen1)+'_'+group+'.txt','r') as file:
-                lines = file.readlines()
-            if len(lines)-1 == len(my_pop):
-                readyToGo = True
-            else:
-                print("Fitness not ready, jobs completed: "+str(len(lines)-1)+" -- Please Wait")
-                time.sleep(60)
-    else:
-        with open(my_path_results+'evol/'+'moo_results_'+str(gen1)+'_'+group+'.txt','r') as file:
-            lines = file.readlines()
+    with open(my_path_results+'evol/'+'moo_results_'+str(gen1)+'_'+group+'.txt','r') as file:
+        lines = file.readlines()
 
     for j in my_pop: #delivering fitnesses
         for k in np.arange(1,len(lines)):
@@ -262,7 +232,6 @@ def run_ft_with_fixed_params(test_params,brain_id,number_runs):
     params['val'] = [brain_id+'_'+str(i)+'_'+str(gen1) for i in my_count_list]  #id list #brain_id+'_'+str(my_count)+'_'+str(gen1) #id
     params['my_path_source'] = my_path_source
     params['my_path_results'] = my_path_results
-    params['mask']=mask
     params['group']='test'
     params['gen']=str(gen1)
 
@@ -276,21 +245,20 @@ def run_ft_with_fixed_params(test_params,brain_id,number_runs):
 
 
 
-def main(brain_id,my_mode ):#if __name__ == '__main__':    
-    #my_mode: def or opt  (default or optimized, used with fixed parameters.)
-    global my_count# counter for job id, it must be re-initialized to a new value in case of a re-run of the optimization.
+def main(brain_id,my_mode): 
+    global my_count # counter for runs id, it must be re-initialized to a new value in case of a re-run of the optimization.
     my_count = 0
-    global gen1 # evolution id.
-    gen1 = 0 #16 #9 #8 #0
-    global my_path_source # source data for each brain
+    global gen1  # evolution id. (iteration)
+    gen1 = 0
+    global my_path_source #source data path for each brain
     my_path_source = my_path + brain_id+'/moo_exvivo/light/'
-    global my_path_results #'/moo_output_test_known_opt/'# # optimization results
+    global my_path_results #output data path for each brain
     if my_mode=='optimize':
         my_path_results = my_path + brain_id+'/moo_output/light/'
     else:
-        my_path_results = my_path + brain_id+'/moo_output/light_test_on_training_opt_1/'  #def or opt  ( for test training /light_test_on_test_def)
+        my_path_results = my_path + brain_id+'/moo_output/light_test_on_training_opt_1/' 
     
-    # create folders to store the results:
+    # create folders structure to store the results:
     if not os.path.exists(my_path_results):
         os.makedirs(my_path_results)
     if not os.path.exists(my_path_results+'tracking/'): #full set of fibers at DWI space
@@ -312,7 +280,7 @@ def main(brain_id,my_mode ):#if __name__ == '__main__':
     if not os.path.exists(my_path_results+'map/'): #jobs files
         os.makedirs(my_path_results+'map/')
 
-    with open(my_path_results+'evol/'+'moo_results.txt', 'a') as file:
+    with open(my_path_results+'evol/'+'moo_results.txt', 'a') as file:  #main results stored at here 
         file.write('#gen ind f1 f2 f3 f4'+'\n')
     with open(my_path_results+'evol/'+'bests.txt', 'a') as file:
         file.write('#gen champions'+'\n')
@@ -320,22 +288,13 @@ def main(brain_id,my_mode ):#if __name__ == '__main__':
     if my_mode=='optimize':
         optimize(grid,brain_id)
     if my_mode=='test': 
-        #for i in range(5): #run 5 times for each brain.
-        #angle:  38.15109891552099 5.945226453676253
-        #cutoff:  0.03765836060482289 0.0176659492702961
-        #minlength:  2.123194407929269 0.5688634266707114
-        
-        #angle:  32.18438616151345 6.286521520704324
-        #cutoff:  0.046538331720147236 0.01185133384102836
-        #minlength:  4.788743544615779 2.5184043117873243
-
-
-        my_runs = 5
         test_params = []
         for i in np.arange(my_runs):
-            #test_params.append([]) # for the case of default
-            #test_params.append(list(np.random.normal([38.15109891552099,0.03765836060482289,2.123194407929269],[5.945226453676253,0.0176659492702961,0.5688634266707114]))) # optimized params.
-            test_params.append(list(np.random.normal([32.18438616151345,0.046538331720147236,4.788743544615779],[6.286521520704324,0.01185133384102836,2.5184043117873243]))) # optimized params.
-
+            if fixed_params['mode']=='test':
+                test_params.append(fixed_params['default']) # for the default case
+            else:
+                test_params.append(list(np.random.normal(fixed_params['optimized']['mean'],fixed_params['optimized']['std'])))
         run_ft_with_fixed_params(test_params,brain_id,my_runs)
-print('the-end')
+
+
+print('end')
