@@ -27,7 +27,7 @@ Results are organized in a folder structure.
 The running time depends on the fiber-tracking algorithm, the complexity of the objective functions and the number of generated fibers.
 
 ## About Brain/MINDS data
-Data sources used here are not publicly available (however, they will be disclosed as part of Brain/MINDS project results in the short/medium term). For more details please visit [Brain/MINDS] (https://www.brainminds.riken.jp).
+Data sources used here are not publicly available (however, they will be disclosed as part of Brain/MINDS project results in the short/medium term). For more details please visit [Brain/MINDS](https://www.brainminds.riken.jp).
 
 ## Dependencies
 
