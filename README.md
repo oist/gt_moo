@@ -4,8 +4,8 @@
   <img width="300" src="https://github.com/oist/gt_moo/blob/master/docs/moo_gt.png">
 </p>
 
-** Here is the python implementation of the `data-driven framework` to optimize and validate parameters of dMRI-based fiber-tracking algorithms.
-The examples use neural tracer data as reference, however, any reference data can be used such as connectomes. To evaluate the goodness of the fiber estimation, comparisons aganist data references are implemented by multiple objective functions. Examples of objective functions are TPR, FPR, distance-weighted coverage, true/false positive ratio, projection coincidence, commissural passage, etc. We ecncourage the search of better objective functions based on new reference data. The frawework optimizes several subjects in parallel. An HPC environment is available, as well as a Desktop PC implementation.**
+Here is the python implementation of the `data-driven framework` to optimize and validate parameters of dMRI-based fiber-tracking algorithms.
+The examples use neural tracer data as reference, however, any reference data can be used such as connectomes. To evaluate the goodness of the fiber estimation, comparisons aganist data references are implemented by multiple objective functions. Examples of objective functions are TPR, FPR, distance-weighted coverage, true/false positive ratio, projection coincidence, commissural passage, etc. We ecncourage the search of better objective functions based on new reference data. The frawework optimizes several subjects in parallel. An HPC environment is available, as well as a Desktop PC implementation.
 
 This page is meant as a brief overview of the framework's functionality. For more detailed information please check our [preprint](https://arxiv.org/abs/1911.13215).
 
