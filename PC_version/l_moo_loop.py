@@ -18,36 +18,35 @@ import l_gt
 
 
 def launch_job(params):
-    print('sending tracking runs .... ')
     for index in np.arange(len(params['val'])):
         l_gt.main(params,n_runs,index)
 
 
 def uniform(low, up, size=None):
-    '''
     my_default = [45,0.1,2.0]
     init_l = list(np.random.normal([45,0.1,2.0],[0.01,0.001,0.01]))
-
     for i in np.arange(len(init_l)):
         if (init_l[i]<low[i] or init_l[i]>up[i]):
             init_l[i]=my_default[i]
     return init_l
-    '''
+    
+    '''  Comment the above block before uncommenting this. This is used when iptimization need to be re-staarted from previous status.
     b = []
     lines = [line.split(' ') for line in open(my_path_results+'evol/moo_results.txt')]
     for k in np.arange(len(lines)):
         if lines[k][0]==str((gen1-1)):
             a = [float(lines[k][2][1:-1]),float(lines[k][3][:-1]),float(lines[k][4][:-2])] #angle, curoff, minlength
-            if a[0]<25. or a[0]>55.: #angle
+            if a[0]<grid['angle'][0] or a[0]>grid['angle'][-1]:
                 a[0]=45.0
-            if a[1]<0.05 or a[1]>0.5: #cutoff
+            if a[1]<grid['cutoff'][0] or a[1]>grid['cutoff'][-1]:
                 a[1] = 0.05
-            if a[2]<1.0 or a[2]>10.:
+            if a[2]<grid['minlength'][0] or a[2]>grid['minlength'][-1]:
                 a[2]=2.0 
             b.append(a)
             print('aaaaaaa: ',a)
+    
     return b[random.randint(0,7)]
-
+    '''
 
 def do_tracking(my_pop,group,brain_id):
     global my_count
@@ -123,11 +122,6 @@ def optimize(grid, brain_id):
     toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=BOUND_LOW, up=BOUND_UP, eta=20.0)
     toolbox.register("mutate", tools.mutPolynomialBounded, low=BOUND_LOW, up=BOUND_UP, eta=20.0, indpb=1.0/NDIM)
     toolbox.register("select", tools.selNSGA2)
-    
-    NGEN = 100  # number of generations
-    MU = 8 #population size
-    MU_best = 1 # number of champions to export to other brains optimizations
-    CXPB = 0.2 # crossover probability
     pop = toolbox.population(n=MU) # generate the initial population
     
     invalid_ind = [ind for ind in pop if not ind.fitness.valid]
@@ -142,7 +136,7 @@ def optimize(grid, brain_id):
             for ind in pop:
                 file.write(str(gen1)+' '+str(ind)+' '+str(ind.fitness.values)+' '+str(ind.fitness.__dict__['id'])+' \n')
 
-    for gen in np.arange(16,NGEN):#(9,NGEN):#(1,NGEN):
+    for gen in np.arange(1,NGEN):#(16,NGEN):#(9,NGEN):#(1,NGEN):
         ######### generational process #############
         gen1=gen
         offspring = tools.selTournamentDCD(pop, len(pop))  # Tournament (Selection 1)
@@ -251,12 +245,9 @@ def main(brain_id,my_mode):
     global gen1  # evolution id. (iteration)
     gen1 = 0
     global my_path_source #source data path for each brain
-    my_path_source = my_path + brain_id+'/moo_exvivo/light/'
+    my_path_source = my_path + brain_id + source_path 
     global my_path_results #output data path for each brain
-    if my_mode=='optimize':
-        my_path_results = my_path + brain_id+'/moo_output/light/'
-    else:
-        my_path_results = my_path + brain_id+'/moo_output/light_test_on_training_opt_1/' 
+    my_path_results = my_path + brain_id + output_path 
     
     # create folders structure to store the results:
     if not os.path.exists(my_path_results):
